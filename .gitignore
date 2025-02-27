@@ -404,3 +404,4 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 LobbyServer/appsettings.json
+LobbyServer/appsettings.Development.json
