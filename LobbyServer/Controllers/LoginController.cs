@@ -6,6 +6,7 @@ namespace LobbyServer.Controllers
     [ApiController]
     public class LoginController : Controller
     {
+        [HttpPost("login")]
         public IActionResult Index()
         {
             return View();
