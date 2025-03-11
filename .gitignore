@@ -405,3 +405,4 @@ FodyWeavers.xsd
 *.sln.iml
 LobbyServer/appsettings.json
 LobbyServer/appsettings.Development.json
+LobbyServer/appsettings.Development.json
