@@ -1,7 +1,5 @@
 ﻿using GameServer.Interfaces.WebSocketInterfaces;
 using GameServer.Interfaces;
-using GameServer.Interfaces;
-using GameServer.Interfaces.WebSocketInterfaces;
 using GameServer.Services;
 using WebSocketSharp;
 using WebSocketSharp.Server;

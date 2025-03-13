@@ -13,14 +13,14 @@ namespace GameServer.Services.Redis
             _redisBaseService = redisBaseService;
         }
 
-        public string GetMatchId()
+        public string GetRoomId()
         {
-            return _redisBaseService.GetString("DBMatchId2");
+            return _redisBaseService.GetString("DBRoomId");
         }
 
-        public void SetMatchId(string matchId)
+        public void SetRoomId(string roomId)
         {
-            _redisBaseService.SetString("DBMatchId2", matchId);
+            _redisBaseService.SetString("DBRoomId", roomId);
         }
     }
 }

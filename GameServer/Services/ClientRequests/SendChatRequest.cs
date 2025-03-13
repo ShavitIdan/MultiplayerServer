@@ -21,7 +21,7 @@ namespace GameServer.Services.ClientRequests
                 return new Dictionary<string, object>() { { "Error","MessageRequired" } };
 
             string message = details["Message"].ToString();
-            GameRoom room = _roomManager.GetRoom(user.MatchId);
+            GameRoom room = _roomManager.GetRoom(user.RoomId);
             room.SendChat(user, message);
             return new Dictionary<string, object>(); ;
         }

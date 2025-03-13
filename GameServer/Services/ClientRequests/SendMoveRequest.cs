@@ -18,11 +18,11 @@ namespace GameServer.Services.ClientRequests
         public object Handle(User user, Dictionary<string, object> details)
         {
             Dictionary<string, object> response = new Dictionary<string, object>();
-            if (details.ContainsKey("Index"))
+            if (details.ContainsKey("MoveData"))
             {
-                GameRoom room = _roomManager.GetRoom(user.MatchId);
+                GameRoom room = _roomManager.GetRoom(user.RoomId);
                 if (room != null)
-                    response = room.ReceivedMove(user, details["Index"].ToString());
+                    response = room.ReceivedMove(user, details["MoveData"].ToString());
             }
             return response;
         }

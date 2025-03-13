@@ -4,23 +4,21 @@ using GameServer.Models;
 
 namespace GameServer.Services.ClientRequests
 {
-    public class JoinRoomRequest : IServiceHandler
+    public class GetLiveRoomInfoRequest : IServiceHandler
     {
         private readonly RoomsManager _roomManager;
-        private readonly SessionManager _sessionManager;
 
-        public JoinRoomRequest(RoomsManager roomManager, SessionManager sessionManager)
+        public string ServiceName => "GetLiveRoomInfo";
+
+        public GetLiveRoomInfoRequest(RoomsManager roomManager)
         {
             _roomManager = roomManager;
-            _sessionManager = sessionManager;
         }
-        public string ServiceName => "JoinRoom";
-
         public object Handle(User user, Dictionary<string, object> details)
         {
             Dictionary<string, object> response = new Dictionary<string, object>()
             {
-                { "Response", "JoinRoom" },
+                { "Response", "GetLiveRoomInfo" },
                 { "IsSuccess", false }
             };
 
@@ -37,20 +35,16 @@ namespace GameServer.Services.ClientRequests
                 response["Error"] = "Room not found";
                 return response;
             }
-
-
             GameRoom room = _roomManager.GetRoom(roomId);
-           
-            if (room.TryAddUser(user))
-            {
-                response["IsSuccess"] = true;
-                response["RoomId"] = roomId;
-            }
-            else
-            {
-                response["Error"] = "Failed to join room";
-            }
+
+            response["IsSuccess"] = true;
+            response["RoomData"] = room.GetRoomDetails();
+            response["RoomProperties"] = room.GetRoomProperties();
+            response["Users"] = room.GetJoinedUsersList();
+
             return response;
         }
     }
+
+
 }

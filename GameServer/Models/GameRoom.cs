@@ -7,11 +7,12 @@ namespace GameServer.Models
 {
     public class GameRoom
     {
-        private string _matchId;
-        private SessionManager _sessionManager;
+        private string _roomId;
         private RoomsManager _roomManager;
         private IRandomizerService _randomizerService;
         private IDateTimeService _dateTimeService;
+        private SessionManager _sessionManager;
+
 
         private string _roomName;
         private string _roomOwner;
@@ -26,42 +27,33 @@ namespace GameServer.Models
         private int _timeOutTime = 35;
         private RoomTime _roomTime;
 
+        private Dictionary<string, object> _roomProperties;
         private List<string> _playersOrder;
-        private Dictionary<string,User> _users;
+        private Dictionary<string,User> _subscribedUsers;
+        private Dictionary<string, User> _joinedUsers;
 
-        public GameRoom(string matchId, SessionManager sessionManager, RoomsManager roomManager,
-           IRandomizerService randomizerService,IDateTimeService dateTimeService, 
-           MatchData matchData, string roomName, string roomOwner, int maxUsersCount)
+
+        public GameRoom(string roomId, RoomsManager roomManager,
+           IRandomizerService randomizerService,IDateTimeService dateTimeService, SessionManager sessionManager,
+                string roomName, string roomOwner, int maxUsersCount, Dictionary<string, object> properties)
         {
             _roomName = roomName;
             _roomOwner = roomOwner;
             _maxUsersCount = maxUsersCount;
-            _matchId = matchId;
-            _sessionManager = sessionManager;
+            _roomId = roomId;
             _roomManager = roomManager;
             _randomizerService = randomizerService;
             _dateTimeService = dateTimeService;
+            _sessionManager = sessionManager;
             _isRoomActive = false;
             _moveCounter = 0;
             _turnIndex = 0;
             _roomTime = new RoomTime(_turnTime, _timeOutTime);
-
+            _roomProperties = new Dictionary<string, object>(properties);
             _playersOrder = new List<string>();
-            _users = new Dictionary<string, User>();
+            _subscribedUsers = new Dictionary<string, User>();
+            _joinedUsers = new Dictionary<string, User>();
 
-            foreach(string userId in matchData.PlayersData.Keys)
-            {
-                User user = sessionManager.GetUser(userId);
-                if (user != null)
-                {
-                    user.CurUserState = User.UserState.Playing;
-                    user.MatchId = _matchId;
-                    _sessionManager.UpdateUser(user);
-
-                    _playersOrder.Add(userId);
-                    _users.Add(userId, user);
-                }
-            }
         }
 
         #region Requests
@@ -74,10 +66,10 @@ namespace GameServer.Models
                 response = new Dictionary<string, object>()
                 {
                     {"Service","BroadcastMove" },
-                    {"SenderId",curUser.UserId},
-                    {"Index", boardIndex},
-                    {"CP",_playersOrder[_turnIndex] },
-                    {"MC", _moveCounter }
+                    {"Sender",curUser.UserId},
+                    {"RoomId", _roomId},
+                    {"MoveData", boardIndex},
+                    {"NextTurn",_playersOrder[_turnIndex] }
                 };
 
                 string toSend = JsonConvert.SerializeObject(response);
@@ -90,6 +82,16 @@ namespace GameServer.Models
 
         public Dictionary<string, object> StopGame(User user, string winner)
         {
+            foreach (string userId in _joinedUsers.Keys)
+            {
+                User usr = _sessionManager.GetUser(userId);
+                if (usr != null)
+                {
+                    usr.CurUserState = User.UserState.Idle;
+                    usr.RoomId = _roomId;
+                    _sessionManager.UpdateUser(usr);
+                }
+            }
             CloseRoom();
             Dictionary<string, object> response = new Dictionary<string, object>()
             {
@@ -132,19 +134,31 @@ namespace GameServer.Models
         #endregion
 
         #region Logic
-        public void StartGame()
+        public void StartGame(string uid)
         {
+            foreach (string userId in _joinedUsers.Keys)
+            {
+                User user = _sessionManager.GetUser(userId);
+                if (user != null)
+                {
+                    user.CurUserState = User.UserState.Playing;
+                    user.RoomId = _roomId;
+                    _sessionManager.UpdateUser(user);
+                }
+            }
+
+
             _turnIndex = _randomizerService.GetRandomNumber(0, 1);
 
             Dictionary<string, object> sendData = new Dictionary<string, object>()
             {
                 { "Service","StartGame"},
-                { "MI",_matchId},
-                { "TT",_dateTimeService.GetUtcTime()},
-                { "MTT",_turnTime},
-                { "CP",_playersOrder[_turnIndex]},
+                { "Sender", uid },
+                { "RoomId",_roomId},
+                { "TurnTime",_turnTime},
+                { "NextTurn",_playersOrder[_turnIndex]},
                 { "Players",_playersOrder},
-                { "MC",_moveCounter}
+                { "TurnsList",new List<object>( GetJoinedUsersList())}
             };
 
             string toSend = JsonConvert.SerializeObject(sendData);
@@ -166,7 +180,7 @@ namespace GameServer.Models
         {
             Console.WriteLine("Closed Room " + DateTime.UtcNow.ToShortTimeString());
            _isRoomActive = false;
-            _roomManager.RemoveRoom(_matchId);
+            _roomManager.RemoveRoom(_roomId);
         }
 
         private void ChangeTurn()
@@ -187,8 +201,8 @@ namespace GameServer.Models
 
         public void BroadcastToRoom(string toSend)
         {
-            foreach (string userId in _users.Keys)
-                _users[userId].SendMessage(toSend);
+            foreach (string userId in _subscribedUsers.Keys)
+                _subscribedUsers[userId].SendMessage(toSend);
         }
 
         public void SendChat(User user, string message)
@@ -197,7 +211,7 @@ namespace GameServer.Models
             {
                 {"Service","SendChat"},
                 {"Sender",user.UserId},
-                {"MatchId",user.MatchId},
+                {"RoomId",user.RoomId},
                 {"Message",message}
             };
 
@@ -214,16 +228,59 @@ namespace GameServer.Models
 
             Dictionary<string, object> roomData = new Dictionary<string, object>()
             {
-                {"RoomId",_matchId },
+                {"RoomId",_roomId },
                 {"Name",_roomName},
                 {"Owner",_roomOwner},
                 {"MaxUsersCount",_maxUsersCount},
-                {"JoinedUsersCount",_users.Count},
+                {"JoinedUsersCount",_joinedUsers.Count},
                 {"TurnTime", _turnTime },
 
             };
             return roomData;
         }
 
+        public bool TryAddUser(User user)
+        {
+            if (user == null || _joinedUsers.Count >= _maxUsersCount || _joinedUsers.ContainsKey(user.UserId))
+                return false;
+
+            
+            user.RoomId = _roomId;
+            _joinedUsers.Add(user.UserId, user);
+            _playersOrder.Add(user.UserId);
+
+            Dictionary<string, object> broadcastData = new Dictionary<string, object>()
+            {
+                {"Service","UserJoinRoom"},
+                {"UserId",user.UserId},
+                {"RoomData", new Dictionary<string,object>(GetRoomDetails())},
+
+            };
+            string toSend = JsonConvert.SerializeObject(broadcastData);
+            BroadcastToRoom(toSend);
+            return true;
+            
+        }
+
+        public bool AddSubscriber(User user)
+        {
+            if (user == null || _subscribedUsers.ContainsKey(user.UserId))
+                return false;
+            _subscribedUsers.Add(user.UserId, user);
+            return true;
+        }
+
+        public Dictionary<string,object> GetRoomProperties()
+        {
+            return _roomProperties;
+        }
+
+        public List<object> GetJoinedUsersList ()
+        {
+            List<object> users = new List<object>();
+            foreach (User user in _joinedUsers.Values)
+                users.Add(user.UserId);
+            return users;
+        }
     }
 }

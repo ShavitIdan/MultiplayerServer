@@ -20,7 +20,7 @@ namespace GameServer.Services.ClientRequests
             Dictionary<string, object> response = new Dictionary<string, object>();
             if (details.ContainsKey("Winner"))
             {
-                GameRoom room = _roomManager.GetRoom(user.MatchId);
+                GameRoom room = _roomManager.GetRoom(user.RoomId);
                 if (room != null)
                     response = room.StopGame(user, details["Winner"].ToString());
             }

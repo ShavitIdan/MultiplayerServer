@@ -2,7 +2,7 @@
 {
     public interface IRoomIdRedisService
     {
-        string GetMatchId();
-        void SetMatchId(string matchId);    
+        string GetRoomId();
+        void SetRoomId(string roomId);    
     }
 }

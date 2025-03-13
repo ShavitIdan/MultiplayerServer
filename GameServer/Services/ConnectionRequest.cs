@@ -9,18 +9,12 @@ namespace GameServer.Services
     public class ConnectionRequest : IConnectionRequest
     {
         private readonly SessionManager _sessionManager;
-        private readonly SearchingManager _searchingManager;
         private readonly IdToUserIdManager _idToUserIdManager;
-        private readonly IRatingRedisService _ratingRedisService;
 
         public ConnectionRequest(SessionManager sessionManager,
-            SearchingManager searchingManager,
-            IdToUserIdManager idToUserIdManager,
-            IRatingRedisService ratingRedisService)
+            IdToUserIdManager idToUserIdManager)
         {
             _sessionManager = sessionManager;
-            _searchingManager = searchingManager;
-            _ratingRedisService = ratingRedisService;
             _idToUserIdManager = idToUserIdManager;
         }
 
@@ -38,15 +32,8 @@ namespace GameServer.Services
 
                     _sessionManager.AddUser(newUser);
                     _idToUserIdManager.AddMapping(session.ID,userId);
-
-                    string rating = _ratingRedisService.GetPlayerRating(userId);
-                    int.TryParse(rating, out int playerRatingValue);
-
-                    if (playerRatingValue > 0)
-                    {
-                        _searchingManager.AddToSearch(userId, playerRatingValue);
-                        return Task.FromResult(true);
-                    }
+                    return Task.FromResult(true);
+                    
                 }
             }
             catch (Exception ex) { }

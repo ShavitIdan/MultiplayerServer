@@ -26,7 +26,7 @@ namespace GameServer.Models
 
         private string _matchId;
 
-        public string MatchId { get => _matchId; set => _matchId = value; }
+        public string RoomId { get => _matchId; set => _matchId = value; }
 
         private DateTime _matchingDate;
         public DateTime MatchingDate { get => _matchingDate; }
