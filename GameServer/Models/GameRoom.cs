@@ -88,11 +88,11 @@ namespace GameServer.Models
                 if (usr != null)
                 {
                     usr.CurUserState = User.UserState.Idle;
-                    usr.RoomId = _roomId;
+                    usr.RoomId = "";
                     _sessionManager.UpdateUser(usr);
                 }
             }
-            CloseRoom();
+            //CloseRoom();
             Dictionary<string, object> response = new Dictionary<string, object>()
             {
                 {"Service","StopGame"},
@@ -282,5 +282,40 @@ namespace GameServer.Models
                 users.Add(user.UserId);
             return users;
         }
+
+        public bool RemoveUser(User user)
+        {
+            if (user == null)
+                return false;
+
+            if(_subscribedUsers.ContainsKey(user.UserId))
+            {
+                _subscribedUsers.Remove(user.UserId);
+            }
+
+            if (_joinedUsers.ContainsKey(user.UserId))
+            {
+                _joinedUsers.Remove(user.UserId);
+                _playersOrder.Remove(user.UserId);
+                user.RoomId = "";
+                user.CurUserState = User.UserState.Idle;
+                _sessionManager.UpdateUser(user);
+               
+                if(_roomOwner == user.UserId)
+                {
+                    if (_joinedUsers.Count > 0)
+                    {
+                        _roomOwner = _joinedUsers.Keys.First();
+                        _roomProperties["Owner"] = _roomOwner;
+                    }
+                    else
+                    {
+                        CloseRoom();
+                    }
+                }
+            }
+            return true;
+        }
+
     }
 }
