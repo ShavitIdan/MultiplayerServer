@@ -8,15 +8,19 @@ namespace LobbyServer.Controllers
     public class LoginController : Controller
     {
         private readonly IPlayersRedisService _playersRedisService;
+        private readonly string connectionString = string.Empty;
 
-        public LoginController(IPlayersRedisService playersRedisService)
+
+        public LoginController(IPlayersRedisService playersRedisService , IConfiguration configuration)
         {
             _playersRedisService = playersRedisService;
+            connectionString = configuration["GameServer:ConnectionString"].ToString();
         }
 
         [HttpGet("Login/{email}&{password}")]
-        public ActionResult< Dictionary<string, object>> Login(string email, string password)
+        public  Dictionary<string, object> Login(string email, string password)
         {
+
             Dictionary<string, object> result = new Dictionary<string, object>();
             Dictionary<string, string> playerData = _playersRedisService.GetPlayer(email);
             if (playerData.Count > 0 && playerData.ContainsKey("Password"))
@@ -28,6 +32,7 @@ namespace LobbyServer.Controllers
 
                     result.Add("IsLoggedIn", true);
                     result.Add("UserId", playerData["UserId"]);
+                    result.Add("GameServerUrl", connectionString);
                 }
                 else
                 {
@@ -42,7 +47,7 @@ namespace LobbyServer.Controllers
             }
 
             result.Add("Response", "Login");
-            return Ok(result);
+            return result;
         }
 
     }

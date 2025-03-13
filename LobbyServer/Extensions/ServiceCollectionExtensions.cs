@@ -10,6 +10,7 @@ namespace LobbyServer.Extensions
             return serviceCollection
                 .AddSingleton<IRedisBaseService, RedisBaseService>()
                 .AddSingleton<IPlayersRedisService, PlayersRedisService>()
+                .AddSingleton<IRatingRedisService, RatingRedisService>()
             ;
         }
     }

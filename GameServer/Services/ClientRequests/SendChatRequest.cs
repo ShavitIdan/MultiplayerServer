@@ -3,14 +3,14 @@ using GameServer.Interfaces;
 using GameServer.Managers;
 using GameServer.Models;
 
-namespace GameServer.Services
+namespace GameServer.Services.ClientRequests
 {
-    public class SendChatService : IServiceHandler
+    public class SendChatRequest : IServiceHandler
     {
         private readonly RoomsManager _roomManager;
         public string ServiceName => "SendChat";
 
-        public SendChatService(RoomsManager roomManager)
+        public SendChatRequest(RoomsManager roomManager)
         {
             _roomManager = roomManager;
         }

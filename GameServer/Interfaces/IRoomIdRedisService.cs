@@ -1,6 +1,6 @@
 ﻿namespace GameServer.Interfaces
 {
-    public interface IMatchIdRedisService
+    public interface IRoomIdRedisService
     {
         string GetMatchId();
         void SetMatchId(string matchId);    

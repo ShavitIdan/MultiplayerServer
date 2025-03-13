@@ -13,6 +13,11 @@ namespace GameServer.Models
         private IRandomizerService _randomizerService;
         private IDateTimeService _dateTimeService;
 
+        private string _roomName;
+        private string _roomOwner;
+        private int _maxUsersCount;
+       
+
         private bool _isRoomActive = false;
         private bool _isDestroyThread = false;
         private int _moveCounter = 0;
@@ -26,8 +31,11 @@ namespace GameServer.Models
 
         public GameRoom(string matchId, SessionManager sessionManager, RoomsManager roomManager,
            IRandomizerService randomizerService,IDateTimeService dateTimeService, 
-           MatchData matchData)
+           MatchData matchData, string roomName, string roomOwner, int maxUsersCount)
         {
+            _roomName = roomName;
+            _roomOwner = roomOwner;
+            _maxUsersCount = maxUsersCount;
             _matchId = matchId;
             _sessionManager = sessionManager;
             _roomManager = roomManager;
@@ -177,7 +185,7 @@ namespace GameServer.Models
 
         #endregion
 
-        private void BroadcastToRoom(string toSend)
+        public void BroadcastToRoom(string toSend)
         {
             foreach (string userId in _users.Keys)
                 _users[userId].SendMessage(toSend);
@@ -196,5 +204,26 @@ namespace GameServer.Models
             string toSend = JsonConvert.SerializeObject(broadcastData);
             BroadcastToRoom(toSend);
         }
+
+        public Dictionary<string, object> GetRoomDetails()
+        {
+            if (_isRoomActive)
+            {
+                return null;
+            }
+
+            Dictionary<string, object> roomData = new Dictionary<string, object>()
+            {
+                {"RoomId",_matchId },
+                {"Name",_roomName},
+                {"Owner",_roomOwner},
+                {"MaxUsersCount",_maxUsersCount},
+                {"JoinedUsersCount",_users.Count},
+                {"TurnTime", _turnTime },
+
+            };
+            return roomData;
+        }
+
     }
 }

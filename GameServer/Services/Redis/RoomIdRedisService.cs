@@ -1,14 +1,14 @@
 ﻿using GameServer.Interfaces;
 using GameServer.Models;
 
-namespace GameServer.Services
+namespace GameServer.Services.Redis
 {
-    public class MatchIdRedisService : IMatchIdRedisService
+    public class RoomIdRedisService : IRoomIdRedisService
     {
 
         private readonly IRedisBaseService _redisBaseService;
 
-        public MatchIdRedisService(IRedisBaseService redisBaseService)
+        public RoomIdRedisService(IRedisBaseService redisBaseService)
         {
             _redisBaseService = redisBaseService;
         }

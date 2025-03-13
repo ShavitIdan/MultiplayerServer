@@ -7,7 +7,9 @@ namespace LobbyServer.Controllers
     [ApiController]
     public class RegisterController : Controller
     {
+
         private readonly IPlayersRedisService _playersRedisService;
+
 
         public RegisterController (IPlayersRedisService playersRedisService)
         {
@@ -34,6 +36,7 @@ namespace LobbyServer.Controllers
                         {"CreatedTime",DateTime.UtcNow.ToString()}
                     };
                     _playersRedisService.SetPlayer(email, registerData);
+
                     result.Add("IsCreated", true);
                 }
                 else
