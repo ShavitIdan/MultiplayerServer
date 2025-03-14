@@ -30,12 +30,6 @@ namespace GameServer.Services.ClientRequests
             int maxUserCount = int.Parse(details["MaxUserCount"].ToString());
             int minUserCount = int.Parse(details["MinUserCount"].ToString());
 
-            Console.WriteLine("[Server] Active Rooms:");
-            foreach (var room in _roomManager.ActiveRooms.Values)
-            {
-                Console.WriteLine($"  - Room ID: {room.GetRoomDetails()["RoomId"]}, Users: {room.GetRoomDetails()["JoinedUsersCount"]}");
-            }
-
             foreach (var gameRoom in _roomManager.ActiveRooms.Values)
             {
                 Dictionary<string,object> roomDetails = gameRoom.GetRoomDetails();
@@ -43,7 +37,7 @@ namespace GameServer.Services.ClientRequests
                 {
                     if (!int.TryParse(roomDetails["JoinedUsersCount"].ToString(), out int userCount))
                     {
-                        Console.WriteLine("[ERROR] Invalid JoinedUsersCount format.");
+                        Console.WriteLine("Error Invalid JoinedUsersCount.");
                         continue;
                     }
 
@@ -54,7 +48,6 @@ namespace GameServer.Services.ClientRequests
                     }
                 }
             }
-            Console.WriteLine($"[Server] Found {((List<Dictionary<string, object>>)response["Rooms"]).Count} rooms matching the criteria.");
 
 
             return response;

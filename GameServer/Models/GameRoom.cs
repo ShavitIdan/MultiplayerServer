@@ -92,7 +92,6 @@ namespace GameServer.Models
                     _sessionManager.UpdateUser(usr);
                 }
             }
-            //CloseRoom();
             Dictionary<string, object> response = new Dictionary<string, object>()
             {
                 {"Service","StopGame"},
